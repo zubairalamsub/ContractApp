@@ -2,7 +2,7 @@ services:
   - type: web
     name: contractorpro-api
     env: docker
-    dockerfilePath: ./Dockerfile.api
+    dockerfilePath: ./Dockerfile
     dockerContext: .
     plan: free
     healthCheckPath: /swagger
