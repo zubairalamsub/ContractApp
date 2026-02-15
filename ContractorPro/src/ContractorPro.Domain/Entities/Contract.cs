@@ -16,4 +16,5 @@ public class Contract
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 
     public ICollection<ContractItem> Items { get; set; } = new List<ContractItem>();
+    public ICollection<Document> Documents { get; set; } = new List<Document>();
 }

@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { Contract, ContractItem, Category, Supplier, DashboardStats, Company } from '../models';
+import { Contract, ContractItem, Category, Supplier, DashboardStats, Company, Document } from '../models';
 
 @Injectable({
   providedIn: 'root'
@@ -103,5 +103,23 @@ export class ApiService {
 
   updateCompany(company: Company): Observable<Company> {
     return this.http.put<Company>(`${this.baseUrl}/company`, company);
+  }
+
+  // Documents
+  getDocuments(contractId: number): Observable<Document[]> {
+    return this.http.get<Document[]>(`${this.baseUrl}/contracts/${contractId}/documents`);
+  }
+
+  uploadDocument(contractId: number, file: File, description?: string): Observable<Document> {
+    const formData = new FormData();
+    formData.append('file', file);
+    if (description) {
+      formData.append('description', description);
+    }
+    return this.http.post<Document>(`${this.baseUrl}/contracts/${contractId}/documents`, formData);
+  }
+
+  deleteDocument(contractId: number, documentId: number): Observable<void> {
+    return this.http.delete<void>(`${this.baseUrl}/contracts/${contractId}/documents/${documentId}`);
   }
 }

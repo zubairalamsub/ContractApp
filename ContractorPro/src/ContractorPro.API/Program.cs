@@ -10,6 +10,9 @@ var builder = WebApplication.CreateBuilder(args);
 // Register LogService as singleton (in-memory logs persist across requests)
 builder.Services.AddSingleton<ILogService, InMemoryLogService>();
 
+// Register Supabase storage service
+builder.Services.AddSingleton<ISupabaseStorageService, SupabaseStorageService>();
+
 // Configure port for Render
 var port = Environment.GetEnvironmentVariable("PORT") ?? "5000";
 builder.WebHost.UseUrls($"http://*:{port}");

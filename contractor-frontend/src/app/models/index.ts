@@ -93,3 +93,17 @@ export interface Company {
   createdAt: string;
   updatedAt: string;
 }
+
+export interface Document {
+  id: number;
+  contractId: number;
+  fileName: string;
+  originalFileName: string;
+  fileUrl?: string;
+  fileSize: number;
+  contentType: string;
+  description?: string;
+  uploadedById: number;
+  uploadedByName?: string;
+  uploadedAt: string;
+}

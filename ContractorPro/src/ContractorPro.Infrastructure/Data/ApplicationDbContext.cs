@@ -15,6 +15,7 @@ public class ApplicationDbContext : DbContext
     public DbSet<Supplier> Suppliers => Set<Supplier>();
     public DbSet<User> Users => Set<User>();
     public DbSet<Company> Companies => Set<Company>();
+    public DbSet<Document> Documents => Set<Document>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -112,6 +113,28 @@ public class ApplicationDbContext : DbContext
             entity.Property(e => e.TaxId).HasMaxLength(50);
             entity.Property(e => e.RegistrationNumber).HasMaxLength(50);
             entity.Property(e => e.Description).HasMaxLength(1000);
+        });
+
+        // Document configuration
+        modelBuilder.Entity<Document>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.FileName).IsRequired().HasMaxLength(255);
+            entity.Property(e => e.OriginalFileName).IsRequired().HasMaxLength(255);
+            entity.Property(e => e.StoragePath).IsRequired().HasMaxLength(500);
+            entity.Property(e => e.FileUrl).HasMaxLength(1000);
+            entity.Property(e => e.ContentType).HasMaxLength(100);
+            entity.Property(e => e.Description).HasMaxLength(500);
+
+            entity.HasOne(e => e.Contract)
+                .WithMany(c => c.Documents)
+                .HasForeignKey(e => e.ContractId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(e => e.UploadedBy)
+                .WithMany()
+                .HasForeignKey(e => e.UploadedById)
+                .OnDelete(DeleteBehavior.Restrict);
         });
 
         // Seed default categories with static date

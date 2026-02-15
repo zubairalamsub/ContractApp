@@ -17,7 +17,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatMenuModule } from '@angular/material/menu';
 import { ApiService } from '../../services/api.service';
 import { ExportService } from '../../services/export.service';
-import { Contract, ContractItem, Category, Supplier } from '../../models';
+import { Contract, ContractItem, Category, Supplier, Document } from '../../models';
 import { ItemDialogComponent } from './item-dialog.component';
 
 @Component({
@@ -245,6 +245,61 @@ import { ItemDialogComponent } from './item-dialog.component';
           </div>
         </mat-card-content>
       </mat-card>
+
+      <!-- Documents Section -->
+      <mat-card class="documents-card">
+        <mat-card-header>
+          <mat-card-title>
+            <mat-icon>folder</mat-icon>
+            Documents
+          </mat-card-title>
+          <div class="doc-actions">
+            <input type="file" #fileInput hidden (change)="onFileSelected($event)">
+            <button mat-raised-button color="primary" (click)="fileInput.click()" [disabled]="uploading">
+              <mat-icon>{{uploading ? 'hourglass_empty' : 'upload_file'}}</mat-icon>
+              {{uploading ? 'Uploading...' : 'Upload Document'}}
+            </button>
+          </div>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="documents-loading" *ngIf="documentsLoading">
+            <mat-spinner diameter="32"></mat-spinner>
+            <span>Loading documents...</span>
+          </div>
+
+          <div class="documents-list" *ngIf="!documentsLoading && documents.length > 0">
+            <div class="document-item" *ngFor="let doc of documents">
+              <div class="doc-icon">
+                <mat-icon>{{getFileIcon(doc.contentType)}}</mat-icon>
+              </div>
+              <div class="doc-info">
+                <span class="doc-name">{{doc.originalFileName}}</span>
+                <span class="doc-meta">
+                  {{formatFileSize(doc.fileSize)}} • Uploaded {{doc.uploadedAt | date:'medium'}}
+                  <span *ngIf="doc.uploadedByName"> by {{doc.uploadedByName}}</span>
+                </span>
+              </div>
+              <div class="doc-actions-row">
+                <a mat-icon-button [href]="doc.fileUrl" target="_blank" matTooltip="Download">
+                  <mat-icon>download</mat-icon>
+                </a>
+                <button mat-icon-button color="warn" (click)="deleteDocument(doc)" matTooltip="Delete">
+                  <mat-icon>delete</mat-icon>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="empty-documents" *ngIf="!documentsLoading && documents.length === 0">
+            <mat-icon>folder_open</mat-icon>
+            <p>No documents uploaded yet</p>
+            <button mat-stroked-button color="primary" (click)="fileInput.click()">
+              <mat-icon>upload_file</mat-icon>
+              Upload First Document
+            </button>
+          </div>
+        </mat-card-content>
+      </mat-card>
     </div>
     </div>
   `,
@@ -401,6 +456,127 @@ import { ItemDialogComponent } from './item-dialog.component';
         mat-icon { font-size: 18px; width: 18px; height: 18px; }
       }
     }
+
+    .documents-card {
+      margin-top: 24px;
+
+      mat-card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 16px;
+
+        mat-card-title {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+
+          mat-icon {
+            color: var(--primary);
+          }
+        }
+      }
+
+      .doc-actions button {
+        gap: 8px;
+      }
+    }
+
+    .documents-loading {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      padding: 40px;
+      color: var(--text-secondary);
+    }
+
+    .documents-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .document-item {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 16px;
+      background: var(--bg-secondary);
+      border-radius: var(--radius-md);
+      transition: all var(--transition-fast);
+
+      &:hover {
+        background: var(--border-light);
+      }
+
+      .doc-icon {
+        width: 48px;
+        height: 48px;
+        background: var(--primary);
+        border-radius: var(--radius-md);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        mat-icon {
+          color: white;
+          font-size: 24px;
+          width: 24px;
+          height: 24px;
+        }
+      }
+
+      .doc-info {
+        flex: 1;
+        min-width: 0;
+
+        .doc-name {
+          display: block;
+          font-weight: 500;
+          color: var(--text-primary);
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+
+        .doc-meta {
+          font-size: 0.8125rem;
+          color: var(--text-secondary);
+        }
+      }
+
+      .doc-actions-row {
+        display: flex;
+        gap: 4px;
+      }
+    }
+
+    .empty-documents {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 48px;
+      text-align: center;
+
+      mat-icon {
+        font-size: 48px;
+        width: 48px;
+        height: 48px;
+        color: var(--text-muted);
+        margin-bottom: 12px;
+      }
+
+      p {
+        margin: 0 0 16px;
+        color: var(--text-secondary);
+      }
+
+      button {
+        gap: 8px;
+      }
+    }
   `]
 })
 export class ContractDetailComponent implements OnInit {
@@ -413,6 +589,11 @@ export class ContractDetailComponent implements OnInit {
   itemColumns = ['name', 'category', 'supplier', 'quantity', 'unitPrice', 'total', 'deliveryStatus', 'actions'];
   loading = true;
   error = '';
+
+  // Documents
+  documents: Document[] = [];
+  documentsLoading = false;
+  uploading = false;
 
   constructor(
     private route: ActivatedRoute,
@@ -436,6 +617,7 @@ export class ContractDetailComponent implements OnInit {
         this.contract = contract;
         this.items = contract.items || [];
         this.loading = false;
+        this.loadDocuments();
       },
       error: (err) => {
         this.error = err.message || 'Failed to load contract';
@@ -505,5 +687,67 @@ export class ContractDetailComponent implements OnInit {
     if (this.contract) {
       this.exportService.printContractReport(this.contract, this.items);
     }
+  }
+
+  // Document methods
+  loadDocuments() {
+    if (!this.contract) return;
+    this.documentsLoading = true;
+    this.apiService.getDocuments(this.contract.id).subscribe({
+      next: (docs) => {
+        this.documents = docs;
+        this.documentsLoading = false;
+      },
+      error: () => {
+        this.documentsLoading = false;
+      }
+    });
+  }
+
+  onFileSelected(event: Event) {
+    const input = event.target as HTMLInputElement;
+    if (!input.files?.length || !this.contract) return;
+
+    const file = input.files[0];
+    this.uploading = true;
+
+    this.apiService.uploadDocument(this.contract.id, file).subscribe({
+      next: () => {
+        this.uploading = false;
+        this.loadDocuments();
+        input.value = ''; // Reset file input
+      },
+      error: () => {
+        this.uploading = false;
+        input.value = '';
+      }
+    });
+  }
+
+  deleteDocument(doc: Document) {
+    if (!this.contract || !confirm(`Delete "${doc.originalFileName}"?`)) return;
+
+    this.apiService.deleteDocument(this.contract.id, doc.id).subscribe({
+      next: () => this.loadDocuments(),
+      error: () => {}
+    });
+  }
+
+  getFileIcon(contentType: string): string {
+    if (contentType.includes('pdf')) return 'picture_as_pdf';
+    if (contentType.includes('image')) return 'image';
+    if (contentType.includes('word') || contentType.includes('document')) return 'description';
+    if (contentType.includes('sheet') || contentType.includes('excel')) return 'table_chart';
+    if (contentType.includes('presentation') || contentType.includes('powerpoint')) return 'slideshow';
+    if (contentType.includes('zip') || contentType.includes('rar') || contentType.includes('archive')) return 'folder_zip';
+    return 'insert_drive_file';
+  }
+
+  formatFileSize(bytes: number): string {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   }
 }
