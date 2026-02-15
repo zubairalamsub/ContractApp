@@ -29,7 +29,7 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 // Configure JWT Authentication
-var jwtKey = builder.Configuration["Jwt:Key"] ?? "ContractorProSecretKey2024!@#$%";
+var jwtKey = builder.Configuration["Jwt:Key"] ?? "ContractorProSecretKey2024!@#$%^&";
 var jwtIssuer = builder.Configuration["Jwt:Issuer"] ?? "ContractorPro";
 var jwtAudience = builder.Configuration["Jwt:Audience"] ?? "ContractorProApp";
 

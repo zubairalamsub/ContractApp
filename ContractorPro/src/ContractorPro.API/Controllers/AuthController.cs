@@ -207,7 +207,7 @@ public class AuthController : ControllerBase
     private string GenerateJwtToken(User user)
     {
         var key = new SymmetricSecurityKey(
-            Encoding.UTF8.GetBytes(_configuration["Jwt:Key"] ?? "ContractorProSecretKey2024!@#$%"));
+            Encoding.UTF8.GetBytes(_configuration["Jwt:Key"] ?? "ContractorProSecretKey2024!@#$%^&"));
         var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
         var claims = new[]
