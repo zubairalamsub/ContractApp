@@ -1,0 +1,32 @@
+# .NET
+bin/
+obj/
+*.dll
+*.pdb
+*.exe
+*.cache
+*.user
+*.suo
+.vs/
+
+# Node
+node_modules/
+dist/
+.angular/
+
+# Environment
+.env
+*.local.json
+
+# IDE
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
