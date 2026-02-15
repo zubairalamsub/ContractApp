@@ -3,8 +3,12 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using ContractorPro.Infrastructure.Data;
+using ContractorPro.API.Services;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Register LogService as singleton (in-memory logs persist across requests)
+builder.Services.AddSingleton<ILogService, InMemoryLogService>();
 
 // Configure port for Render
 var port = Environment.GetEnvironmentVariable("PORT") ?? "5000";
@@ -61,6 +65,35 @@ var app = builder.Build();
 app.UseSwagger();
 app.UseSwaggerUI();
 
+// Global exception handler
+app.Use(async (context, next) =>
+{
+    try
+    {
+        await next(context);
+    }
+    catch (Exception ex)
+    {
+        var logService = context.RequestServices.GetRequiredService<ILogService>();
+        logService.LogError(
+            "GlobalExceptionHandler",
+            ex.Message,
+            ex.StackTrace,
+            context.Request.Path,
+            context.Request.Method
+        );
+
+        context.Response.StatusCode = 500;
+        context.Response.ContentType = "application/json";
+        await context.Response.WriteAsJsonAsync(new
+        {
+            success = false,
+            message = $"Internal server error: {ex.Message}",
+            source = ex.Source
+        });
+    }
+});
+
 // Health check endpoint
 app.MapGet("/health", () => Results.Ok(new { status = "healthy", timestamp = DateTime.UtcNow }));
 
@@ -74,8 +107,19 @@ app.MapControllers();
 // Auto-migrate database
 using (var scope = app.Services.CreateScope())
 {
-    var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-    db.Database.Migrate();
+    var logService = scope.ServiceProvider.GetRequiredService<ILogService>();
+    try
+    {
+        logService.LogInfo("Startup", "Starting database migration...");
+        var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        db.Database.Migrate();
+        logService.LogInfo("Startup", "Database migration completed successfully");
+    }
+    catch (Exception ex)
+    {
+        logService.LogError("Startup.DatabaseMigration", ex.Message, ex.StackTrace);
+        throw; // Re-throw to prevent app from starting with broken DB
+    }
 }
 
 app.Run();

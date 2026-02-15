@@ -8,6 +8,7 @@ using System.Text;
 using ContractorPro.Domain.Entities;
 using ContractorPro.Infrastructure.Data;
 using ContractorPro.API.Models;
+using ContractorPro.API.Services;
 
 namespace ContractorPro.API.Controllers;
 
@@ -17,113 +18,165 @@ public class AuthController : ControllerBase
 {
     private readonly ApplicationDbContext _context;
     private readonly IConfiguration _configuration;
+    private readonly ILogService _logService;
 
-    public AuthController(ApplicationDbContext context, IConfiguration configuration)
+    public AuthController(ApplicationDbContext context, IConfiguration configuration, ILogService logService)
     {
         _context = context;
         _configuration = configuration;
+        _logService = logService;
     }
 
     [HttpPost("login")]
     public async Task<ActionResult<AuthResponse>> Login(LoginRequest request)
     {
-        var user = await _context.Users
-            .FirstOrDefaultAsync(u => u.Username == request.Username && u.IsActive);
-
-        if (user == null)
+        try
         {
-            return Ok(new AuthResponse
+            _logService.LogInfo("AuthController.Login", $"Login attempt for user: {request.Username}");
+
+            var user = await _context.Users
+                .FirstOrDefaultAsync(u => u.Username == request.Username && u.IsActive);
+
+            if (user == null)
             {
-                Success = false,
-                Message = "Invalid username or password"
-            });
-        }
-
-        var passwordHash = HashPassword(request.Password);
-        if (user.PasswordHash != passwordHash)
-        {
-            return Ok(new AuthResponse
-            {
-                Success = false,
-                Message = "Invalid username or password"
-            });
-        }
-
-        // Update last login
-        user.LastLoginAt = DateTime.UtcNow;
-        await _context.SaveChangesAsync();
-
-        var token = GenerateJwtToken(user);
-
-        return Ok(new AuthResponse
-        {
-            Success = true,
-            Message = "Login successful",
-            Token = token,
-            User = new UserDto
-            {
-                Id = user.Id,
-                Username = user.Username,
-                Email = user.Email,
-                FullName = user.FullName,
-                Role = user.Role
+                _logService.LogInfo("AuthController.Login", $"User not found: {request.Username}");
+                return Ok(new AuthResponse
+                {
+                    Success = false,
+                    Message = "Invalid username or password"
+                });
             }
-        });
+
+            var passwordHash = HashPassword(request.Password);
+            if (user.PasswordHash != passwordHash)
+            {
+                _logService.LogInfo("AuthController.Login", $"Invalid password for user: {request.Username}");
+                return Ok(new AuthResponse
+                {
+                    Success = false,
+                    Message = "Invalid username or password"
+                });
+            }
+
+            // Update last login
+            user.LastLoginAt = DateTime.UtcNow;
+            await _context.SaveChangesAsync();
+
+            var token = GenerateJwtToken(user);
+
+            _logService.LogInfo("AuthController.Login", $"Login successful for user: {request.Username}");
+
+            return Ok(new AuthResponse
+            {
+                Success = true,
+                Message = "Login successful",
+                Token = token,
+                User = new UserDto
+                {
+                    Id = user.Id,
+                    Username = user.Username,
+                    Email = user.Email,
+                    FullName = user.FullName,
+                    Role = user.Role
+                }
+            });
+        }
+        catch (Exception ex)
+        {
+            _logService.LogError(
+                "AuthController.Login",
+                ex.Message,
+                ex.StackTrace,
+                HttpContext.Request.Path,
+                HttpContext.Request.Method
+            );
+
+            return StatusCode(500, new AuthResponse
+            {
+                Success = false,
+                Message = $"Internal server error: {ex.Message}"
+            });
+        }
     }
 
     [HttpPost("register")]
     public async Task<ActionResult<AuthResponse>> Register(RegisterRequest request)
     {
-        // Check if username exists
-        if (await _context.Users.AnyAsync(u => u.Username == request.Username))
+        try
         {
-            return Ok(new AuthResponse
+            _logService.LogInfo("AuthController.Register", $"Registration attempt for user: {request.Username}, email: {request.Email}");
+
+            // Check if username exists
+            if (await _context.Users.AnyAsync(u => u.Username == request.Username))
             {
-                Success = false,
-                Message = "Username already exists"
-            });
-        }
-
-        // Check if email exists
-        if (await _context.Users.AnyAsync(u => u.Email == request.Email))
-        {
-            return Ok(new AuthResponse
-            {
-                Success = false,
-                Message = "Email already exists"
-            });
-        }
-
-        var user = new User
-        {
-            Username = request.Username,
-            Email = request.Email,
-            PasswordHash = HashPassword(request.Password),
-            FullName = request.FullName,
-            Role = "User",
-            IsActive = true,
-            CreatedAt = DateTime.UtcNow
-        };
-
-        _context.Users.Add(user);
-        await _context.SaveChangesAsync();
-
-        var token = GenerateJwtToken(user);
-
-        return Ok(new AuthResponse
-        {
-            Success = true,
-            Message = "Registration successful",
-            Token = token,
-            User = new UserDto
-            {
-                Id = user.Id,
-                Username = user.Username,
-                Email = user.Email,
-                FullName = user.FullName,
-                Role = user.Role
+                _logService.LogInfo("AuthController.Register", $"Username already exists: {request.Username}");
+                return Ok(new AuthResponse
+                {
+                    Success = false,
+                    Message = "Username already exists"
+                });
             }
-        });
+
+            // Check if email exists
+            if (await _context.Users.AnyAsync(u => u.Email == request.Email))
+            {
+                _logService.LogInfo("AuthController.Register", $"Email already exists: {request.Email}");
+                return Ok(new AuthResponse
+                {
+                    Success = false,
+                    Message = "Email already exists"
+                });
+            }
+
+            var user = new User
+            {
+                Username = request.Username,
+                Email = request.Email,
+                PasswordHash = HashPassword(request.Password),
+                FullName = request.FullName,
+                Role = "User",
+                IsActive = true,
+                CreatedAt = DateTime.UtcNow
+            };
+
+            _context.Users.Add(user);
+            await _context.SaveChangesAsync();
+
+            var token = GenerateJwtToken(user);
+
+            _logService.LogInfo("AuthController.Register", $"Registration successful for user: {request.Username}");
+
+            return Ok(new AuthResponse
+            {
+                Success = true,
+                Message = "Registration successful",
+                Token = token,
+                User = new UserDto
+                {
+                    Id = user.Id,
+                    Username = user.Username,
+                    Email = user.Email,
+                    FullName = user.FullName,
+                    Role = user.Role
+                }
+            });
+        }
+        catch (Exception ex)
+        {
+            _logService.LogError(
+                "AuthController.Register",
+                ex.Message,
+                ex.StackTrace,
+                HttpContext.Request.Path,
+                HttpContext.Request.Method
+            );
+
+            return StatusCode(500, new AuthResponse
+            {
+                Success = false,
+                Message = $"Internal server error: {ex.Message}"
+            });
+        }
     }
 
     [HttpGet("me")]
