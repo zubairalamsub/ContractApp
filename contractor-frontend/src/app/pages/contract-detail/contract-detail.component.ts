@@ -14,7 +14,9 @@ import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatMenuModule } from '@angular/material/menu';
 import { ApiService } from '../../services/api.service';
+import { ExportService } from '../../services/export.service';
 import { Contract, ContractItem, Category, Supplier } from '../../models';
 import { ItemDialogComponent } from './item-dialog.component';
 
@@ -25,7 +27,7 @@ import { ItemDialogComponent } from './item-dialog.component';
     CommonModule, RouterModule, FormsModule, MatCardModule, MatButtonModule,
     MatIconModule, MatTableModule, MatChipsModule, MatDialogModule,
     MatProgressBarModule, MatProgressSpinnerModule, MatInputModule, MatSelectModule,
-    MatFormFieldModule, MatTooltipModule
+    MatFormFieldModule, MatTooltipModule, MatMenuModule
   ],
   template: `
     <div class="contract-detail fade-in">
@@ -57,9 +59,29 @@ import { ItemDialogComponent } from './item-dialog.component';
             <span class="contract-number">{{contract.contractNumber}}</span>
           </div>
         </div>
-        <mat-chip [class]="'status-' + contract.status.toLowerCase()">
-          {{contract.status}}
-        </mat-chip>
+        <div class="header-actions">
+          <button mat-stroked-button [matMenuTriggerFor]="exportMenu" class="export-btn">
+            <mat-icon>download</mat-icon>
+            Export
+          </button>
+          <mat-menu #exportMenu="matMenu">
+            <button mat-menu-item (click)="exportToExcel()">
+              <mat-icon>table_chart</mat-icon>
+              <span>Export to Excel</span>
+            </button>
+            <button mat-menu-item (click)="exportToCSV()">
+              <mat-icon>description</mat-icon>
+              <span>Export to CSV</span>
+            </button>
+            <button mat-menu-item (click)="printReport()">
+              <mat-icon>print</mat-icon>
+              <span>Print Report</span>
+            </button>
+          </mat-menu>
+          <mat-chip [class]="'status-' + contract.status.toLowerCase()">
+            {{contract.status}}
+          </mat-chip>
+        </div>
       </div>
 
       <div class="info-row">
@@ -299,6 +321,21 @@ import { ItemDialogComponent } from './item-dialog.component';
       h1 { margin: 0; color: #1a1a2e; }
       .contract-number { color: #6b7280; font-size: 14px; }
     }
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .export-btn {
+      gap: 8px;
+      height: 40px;
+      border-color: var(--border-medium);
+      mat-icon { color: var(--primary); }
+      &:hover {
+        border-color: var(--primary);
+        background: rgba(79, 70, 229, 0.05);
+      }
+    }
     .info-row, .stats-row {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -380,7 +417,8 @@ export class ContractDetailComponent implements OnInit {
   constructor(
     private route: ActivatedRoute,
     private apiService: ApiService,
-    private dialog: MatDialog
+    private dialog: MatDialog,
+    private exportService: ExportService
   ) {}
 
   ngOnInit() {
@@ -448,6 +486,24 @@ export class ContractDetailComponent implements OnInit {
       this.apiService.deleteContractItem(this.contract.id, item.id).subscribe(() => {
         this.loadContract(this.contract!.id);
       });
+    }
+  }
+
+  exportToExcel() {
+    if (this.contract) {
+      this.exportService.exportContractDetailToExcel(this.contract, this.items);
+    }
+  }
+
+  exportToCSV() {
+    if (this.contract) {
+      this.exportService.exportContractDetailToCSV(this.contract, this.items);
+    }
+  }
+
+  printReport() {
+    if (this.contract) {
+      this.exportService.printContractReport(this.contract, this.items);
     }
   }
 }

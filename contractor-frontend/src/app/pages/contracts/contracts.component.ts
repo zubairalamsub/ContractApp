@@ -11,7 +11,9 @@ import { MatDialogModule, MatDialog } from '@angular/material/dialog';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatMenuModule } from '@angular/material/menu';
 import { ApiService } from '../../services/api.service';
+import { ExportService } from '../../services/export.service';
 import { Contract } from '../../models';
 import { ContractDialogComponent } from './contract-dialog.component';
 
@@ -21,7 +23,7 @@ import { ContractDialogComponent } from './contract-dialog.component';
   imports: [
     CommonModule, RouterModule, FormsModule, MatCardModule, MatButtonModule,
     MatIconModule, MatTableModule, MatChipsModule, MatDialogModule, MatProgressBarModule,
-    MatProgressSpinnerModule, MatTooltipModule
+    MatProgressSpinnerModule, MatTooltipModule, MatMenuModule
   ],
   template: `
     <div class="contracts-page fade-in">
@@ -30,10 +32,27 @@ import { ContractDialogComponent } from './contract-dialog.component';
           <h1>Contracts</h1>
           <p class="subtitle">Manage and track all your contracts</p>
         </div>
-        <button mat-raised-button color="primary" (click)="openDialog()" class="add-btn" [disabled]="loading">
-          <mat-icon>add</mat-icon>
-          New Contract
-        </button>
+        <div class="header-actions">
+          <button mat-stroked-button [matMenuTriggerFor]="exportMenu" class="export-btn"
+                  [disabled]="loading || contracts.length === 0">
+            <mat-icon>download</mat-icon>
+            Export
+          </button>
+          <mat-menu #exportMenu="matMenu">
+            <button mat-menu-item (click)="exportToExcel()">
+              <mat-icon>table_chart</mat-icon>
+              <span>Export to Excel</span>
+            </button>
+            <button mat-menu-item (click)="exportToCSV()">
+              <mat-icon>description</mat-icon>
+              <span>Export to CSV</span>
+            </button>
+          </mat-menu>
+          <button mat-raised-button color="primary" (click)="openDialog()" class="add-btn" [disabled]="loading">
+            <mat-icon>add</mat-icon>
+            New Contract
+          </button>
+        </div>
       </header>
 
       <!-- Loading State -->
@@ -175,6 +194,27 @@ import { ContractDialogComponent } from './contract-dialog.component';
           color: var(--text-secondary);
           font-size: 1rem;
         }
+      }
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .export-btn {
+      gap: 8px;
+      height: 48px;
+      border-color: var(--border-medium);
+
+      mat-icon {
+        color: var(--primary);
+      }
+
+      &:hover {
+        border-color: var(--primary);
+        background: rgba(79, 70, 229, 0.05);
       }
     }
 
@@ -355,8 +395,13 @@ import { ContractDialogComponent } from './contract-dialog.component';
       .page-header {
         flex-direction: column;
         align-items: stretch;
+      }
 
-        .add-btn {
+      .header-actions {
+        flex-direction: column;
+        width: 100%;
+
+        .export-btn, .add-btn {
           width: 100%;
         }
       }
@@ -423,7 +468,11 @@ export class ContractsComponent implements OnInit {
   loading = true;
   error = '';
 
-  constructor(private apiService: ApiService, private dialog: MatDialog) {}
+  constructor(
+    private apiService: ApiService,
+    private dialog: MatDialog,
+    private exportService: ExportService
+  ) {}
 
   ngOnInit() {
     this.loadContracts();
@@ -469,5 +518,13 @@ export class ContractsComponent implements OnInit {
         this.loadContracts();
       });
     }
+  }
+
+  exportToExcel() {
+    this.exportService.exportContractsToExcel(this.contracts, 'contracts-report');
+  }
+
+  exportToCSV() {
+    this.exportService.exportContractsToCSV(this.contracts, 'contracts-report');
   }
 }
