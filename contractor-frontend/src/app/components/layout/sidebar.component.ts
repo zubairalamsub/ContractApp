@@ -57,6 +57,7 @@ import { AuthService } from '../../services/auth.service';
           </div>
           <div class="user-details" *ngIf="!collapsed">
             <span class="user-name">{{user.fullName}}</span>
+            <span class="user-company" *ngIf="user.companyName">{{user.companyName}}</span>
             <span class="user-role">{{user.role}}</span>
           </div>
         </div>
@@ -255,8 +256,14 @@ import { AuthService } from '../../services/auth.service';
       text-overflow: ellipsis;
     }
 
+    .user-company {
+      font-size: 11px;
+      color: var(--primary-light);
+      font-weight: 500;
+    }
+
     .user-role {
-      font-size: 12px;
+      font-size: 11px;
       color: var(--text-muted);
     }
 

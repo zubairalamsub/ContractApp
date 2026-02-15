@@ -89,6 +89,12 @@ public class ApplicationDbContext : DbContext
             entity.Property(e => e.Role).HasMaxLength(50);
             entity.HasIndex(e => e.Username).IsUnique();
             entity.HasIndex(e => e.Email).IsUnique();
+
+            // User-Company relationship
+            entity.HasOne(e => e.Company)
+                .WithMany(c => c.Users)
+                .HasForeignKey(e => e.CompanyId)
+                .OnDelete(DeleteBehavior.SetNull);
         });
 
         // Company configuration
@@ -137,7 +143,8 @@ public class ApplicationDbContext : DbContext
                 FullName = "System Administrator",
                 Role = "Admin",
                 IsActive = true,
-                CreatedAt = seedDate
+                CreatedAt = seedDate,
+                CompanyId = 1 // Assign to default company
             }
         );
 

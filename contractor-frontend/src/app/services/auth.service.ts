@@ -9,6 +9,8 @@ export interface User {
   email: string;
   fullName: string;
   role: string;
+  companyId?: number;
+  companyName?: string;
 }
 
 export interface AuthResponse {
@@ -28,6 +30,13 @@ export interface RegisterRequest {
   email: string;
   password: string;
   fullName: string;
+  companyId?: number;
+  companyName?: string;
+}
+
+export interface CompanyOption {
+  id: number;
+  name: string;
 }
 
 @Injectable({
@@ -91,5 +100,18 @@ export class AuthService {
 
   getCurrentUser(): User | null {
     return this.currentUserSubject.value;
+  }
+
+  getCompanies(): Observable<CompanyOption[]> {
+    return this.http.get<CompanyOption[]>(`${this.baseUrl}/companies`);
+  }
+
+  updateUserCompany(companyId: number | null): Observable<User> {
+    return this.http.put<User>(`${this.baseUrl}/company`, { companyId }).pipe(
+      tap(user => {
+        localStorage.setItem('user', JSON.stringify(user));
+        this.currentUserSubject.next(user);
+      })
+    );
   }
 }

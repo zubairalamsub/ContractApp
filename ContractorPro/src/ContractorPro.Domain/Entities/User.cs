@@ -11,4 +11,8 @@ public class User
     public bool IsActive { get; set; } = true;
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime? LastLoginAt { get; set; }
+
+    // Company relationship
+    public int? CompanyId { get; set; }
+    public Company? Company { get; set; }
 }

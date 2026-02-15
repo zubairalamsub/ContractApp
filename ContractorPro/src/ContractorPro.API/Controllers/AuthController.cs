@@ -35,6 +35,7 @@ public class AuthController : ControllerBase
             _logService.LogInfo("AuthController.Login", $"Login attempt for user: {request.Username}");
 
             var user = await _context.Users
+                .Include(u => u.Company)
                 .FirstOrDefaultAsync(u => u.Username == request.Username && u.IsActive);
 
             if (user == null)
@@ -77,7 +78,9 @@ public class AuthController : ControllerBase
                     Username = user.Username,
                     Email = user.Email,
                     FullName = user.FullName,
-                    Role = user.Role
+                    Role = user.Role,
+                    CompanyId = user.CompanyId,
+                    CompanyName = user.Company?.Name
                 }
             });
         }
@@ -128,6 +131,35 @@ public class AuthController : ControllerBase
                 });
             }
 
+            int? companyId = null;
+            string? companyName = null;
+
+            // Handle company assignment
+            if (request.CompanyId.HasValue)
+            {
+                // Join existing company
+                var existingCompany = await _context.Companies.FindAsync(request.CompanyId.Value);
+                if (existingCompany != null)
+                {
+                    companyId = existingCompany.Id;
+                    companyName = existingCompany.Name;
+                }
+            }
+            else if (!string.IsNullOrWhiteSpace(request.CompanyName))
+            {
+                // Create new company
+                var newCompany = new Company
+                {
+                    Name = request.CompanyName,
+                    CreatedAt = DateTime.UtcNow,
+                    UpdatedAt = DateTime.UtcNow
+                };
+                _context.Companies.Add(newCompany);
+                await _context.SaveChangesAsync();
+                companyId = newCompany.Id;
+                companyName = newCompany.Name;
+            }
+
             var user = new User
             {
                 Username = request.Username,
@@ -136,7 +168,8 @@ public class AuthController : ControllerBase
                 FullName = request.FullName,
                 Role = "User",
                 IsActive = true,
-                CreatedAt = DateTime.UtcNow
+                CreatedAt = DateTime.UtcNow,
+                CompanyId = companyId
             };
 
             _context.Users.Add(user);
@@ -157,7 +190,9 @@ public class AuthController : ControllerBase
                     Username = user.Username,
                     Email = user.Email,
                     FullName = user.FullName,
-                    Role = user.Role
+                    Role = user.Role,
+                    CompanyId = companyId,
+                    CompanyName = companyName
                 }
             });
         }
@@ -188,7 +223,9 @@ public class AuthController : ControllerBase
             return Unauthorized();
         }
 
-        var user = await _context.Users.FindAsync(int.Parse(userId));
+        var user = await _context.Users
+            .Include(u => u.Company)
+            .FirstOrDefaultAsync(u => u.Id == int.Parse(userId));
         if (user == null)
         {
             return NotFound();
@@ -200,7 +237,71 @@ public class AuthController : ControllerBase
             Username = user.Username,
             Email = user.Email,
             FullName = user.FullName,
-            Role = user.Role
+            Role = user.Role,
+            CompanyId = user.CompanyId,
+            CompanyName = user.Company?.Name
+        });
+    }
+
+    [HttpGet("companies")]
+    public async Task<ActionResult<IEnumerable<CompanyDto>>> GetCompanies()
+    {
+        var companies = await _context.Companies
+            .OrderBy(c => c.Name)
+            .Select(c => new CompanyDto
+            {
+                Id = c.Id,
+                Name = c.Name
+            })
+            .ToListAsync();
+
+        return Ok(companies);
+    }
+
+    [HttpPut("company")]
+    public async Task<ActionResult<UserDto>> UpdateUserCompany([FromBody] UpdateCompanyRequest request)
+    {
+        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrEmpty(userId))
+        {
+            return Unauthorized();
+        }
+
+        var user = await _context.Users
+            .Include(u => u.Company)
+            .FirstOrDefaultAsync(u => u.Id == int.Parse(userId));
+        if (user == null)
+        {
+            return NotFound();
+        }
+
+        if (request.CompanyId.HasValue)
+        {
+            var company = await _context.Companies.FindAsync(request.CompanyId.Value);
+            if (company == null)
+            {
+                return BadRequest("Company not found");
+            }
+            user.CompanyId = company.Id;
+            user.Company = company;
+        }
+        else
+        {
+            user.CompanyId = null;
+            user.Company = null;
+        }
+
+        await _context.SaveChangesAsync();
+
+        return Ok(new UserDto
+        {
+            Id = user.Id,
+            Username = user.Username,
+            Email = user.Email,
+            FullName = user.FullName,
+            Role = user.Role,
+            CompanyId = user.CompanyId,
+            CompanyName = user.Company?.Name
         });
     }
 

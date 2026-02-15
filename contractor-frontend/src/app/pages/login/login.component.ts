@@ -9,7 +9,9 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { AuthService } from '../../services/auth.service';
+import { MatSelectModule } from '@angular/material/select';
+import { MatRadioModule } from '@angular/material/radio';
+import { AuthService, CompanyOption } from '../../services/auth.service';
 
 @Component({
   selector: 'app-login',
@@ -17,7 +19,7 @@ import { AuthService } from '../../services/auth.service';
   imports: [
     CommonModule, FormsModule, MatCardModule, MatFormFieldModule,
     MatInputModule, MatButtonModule, MatIconModule, MatTabsModule,
-    MatProgressSpinnerModule
+    MatProgressSpinnerModule, MatSelectModule, MatRadioModule
   ],
   template: `
     <div class="login-container">
@@ -136,6 +138,31 @@ import { AuthService } from '../../services/auth.service';
                       <mat-icon>{{hidePassword ? 'visibility_off' : 'visibility'}}</mat-icon>
                     </button>
                   </mat-form-field>
+
+                  <div class="company-section">
+                    <label class="section-label">Company (Optional)</label>
+                    <mat-radio-group [(ngModel)]="companyOption" name="companyOption" class="company-radio">
+                      <mat-radio-button value="none">No Company</mat-radio-button>
+                      <mat-radio-button value="existing">Join Existing</mat-radio-button>
+                      <mat-radio-button value="new">Create New</mat-radio-button>
+                    </mat-radio-group>
+
+                    <mat-form-field appearance="outline" *ngIf="companyOption === 'existing'" class="company-field">
+                      <mat-label>Select Company</mat-label>
+                      <mat-select [(ngModel)]="registerData.companyId" name="companyId">
+                        <mat-option *ngFor="let company of companies" [value]="company.id">
+                          {{company.name}}
+                        </mat-option>
+                      </mat-select>
+                      <mat-icon matPrefix>business</mat-icon>
+                    </mat-form-field>
+
+                    <mat-form-field appearance="outline" *ngIf="companyOption === 'new'" class="company-field">
+                      <mat-label>Company Name</mat-label>
+                      <input matInput [(ngModel)]="registerData.companyName" name="companyName">
+                      <mat-icon matPrefix>domain_add</mat-icon>
+                    </mat-form-field>
+                  </div>
 
                   <div class="error-message" *ngIf="errorMessage">
                     <mat-icon>error_outline</mat-icon>
@@ -386,6 +413,34 @@ import { AuthService } from '../../services/auth.service';
       }
     }
 
+    .company-section {
+      margin: 16px 0;
+      padding: 16px;
+      background: var(--bg-secondary);
+      border-radius: var(--radius-md);
+
+      .section-label {
+        display: block;
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: var(--text-primary);
+        margin-bottom: 12px;
+      }
+
+      .company-radio {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        margin-bottom: 12px;
+      }
+
+      .company-field {
+        width: 100%;
+        margin-top: 8px;
+        margin-bottom: 0;
+      }
+    }
+
     ::ng-deep .mat-mdc-tab-labels {
       justify-content: center;
       gap: 8px;
@@ -455,15 +510,27 @@ import { AuthService } from '../../services/auth.service';
 })
 export class LoginComponent {
   loginData = { username: '', password: '' };
-  registerData = { username: '', email: '', password: '', fullName: '' };
+  registerData: { username: string; email: string; password: string; fullName: string; companyId?: number; companyName?: string } = {
+    username: '', email: '', password: '', fullName: ''
+  };
   hidePassword = true;
   loading = false;
   errorMessage = '';
+  companyOption = 'none';
+  companies: CompanyOption[] = [];
 
   constructor(private authService: AuthService, private router: Router) {
     if (this.authService.isAuthenticated()) {
       this.router.navigate(['/dashboard']);
     }
+    this.loadCompanies();
+  }
+
+  loadCompanies() {
+    this.authService.getCompanies().subscribe({
+      next: (companies) => this.companies = companies,
+      error: () => this.companies = []
+    });
   }
 
   login() {
@@ -490,7 +557,18 @@ export class LoginComponent {
     this.loading = true;
     this.errorMessage = '';
 
-    this.authService.register(this.registerData).subscribe({
+    // Prepare registration data based on company option
+    const data = { ...this.registerData };
+    if (this.companyOption === 'none') {
+      delete data.companyId;
+      delete data.companyName;
+    } else if (this.companyOption === 'existing') {
+      delete data.companyName;
+    } else if (this.companyOption === 'new') {
+      delete data.companyId;
+    }
+
+    this.authService.register(data).subscribe({
       next: (response) => {
         this.loading = false;
         if (response.success) {
