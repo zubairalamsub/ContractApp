@@ -14,15 +14,18 @@ public class DocumentsController : ControllerBase
     private readonly ApplicationDbContext _context;
     private readonly ISupabaseStorageService _storageService;
     private readonly ILogger<DocumentsController> _logger;
+    private readonly ILogService _logService;
 
     public DocumentsController(
         ApplicationDbContext context,
         ISupabaseStorageService storageService,
-        ILogger<DocumentsController> logger)
+        ILogger<DocumentsController> logger,
+        ILogService logService)
     {
         _context = context;
         _storageService = storageService;
         _logger = logger;
+        _logService = logService;
     }
 
     [HttpGet]
@@ -127,7 +130,14 @@ public class DocumentsController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error uploading document for contract {ContractId}", contractId);
-            return StatusCode(500, "Failed to upload document");
+            _logService.LogError(
+                "DocumentsController.Upload",
+                $"Failed to upload: {ex.Message}",
+                ex.StackTrace,
+                $"/api/contracts/{contractId}/documents",
+                "POST"
+            );
+            return StatusCode(500, new { message = ex.Message, source = ex.Source });
         }
     }
 
