@@ -16,7 +16,7 @@ public class ContractItem
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 
-    public Contract Contract { get; set; } = null!;
-    public Category Category { get; set; } = null!;
+    public Contract? Contract { get; set; }
+    public Category? Category { get; set; }
     public Supplier? Supplier { get; set; }
 }
