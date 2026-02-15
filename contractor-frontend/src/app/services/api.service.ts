@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { Contract, ContractItem, Category, Supplier, DashboardStats } from '../models';
+import { Contract, ContractItem, Category, Supplier, DashboardStats, Company } from '../models';
 
 @Injectable({
   providedIn: 'root'
@@ -94,5 +94,14 @@ export class ApiService {
 
   deleteSupplier(id: number): Observable<void> {
     return this.http.delete<void>(`${this.baseUrl}/suppliers/${id}`);
+  }
+
+  // Company
+  getCompany(): Observable<Company> {
+    return this.http.get<Company>(`${this.baseUrl}/company`);
+  }
+
+  updateCompany(company: Company): Observable<Company> {
+    return this.http.put<Company>(`${this.baseUrl}/company`, company);
   }
 }

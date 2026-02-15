@@ -14,6 +14,7 @@ public class ApplicationDbContext : DbContext
     public DbSet<Category> Categories => Set<Category>();
     public DbSet<Supplier> Suppliers => Set<Supplier>();
     public DbSet<User> Users => Set<User>();
+    public DbSet<Company> Companies => Set<Company>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -90,6 +91,23 @@ public class ApplicationDbContext : DbContext
             entity.HasIndex(e => e.Email).IsUnique();
         });
 
+        // Company configuration
+        modelBuilder.Entity<Company>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Name).IsRequired().HasMaxLength(200);
+            entity.Property(e => e.Address).HasMaxLength(500);
+            entity.Property(e => e.City).HasMaxLength(100);
+            entity.Property(e => e.Country).HasMaxLength(100);
+            entity.Property(e => e.PostalCode).HasMaxLength(20);
+            entity.Property(e => e.Phone).HasMaxLength(50);
+            entity.Property(e => e.Email).HasMaxLength(200);
+            entity.Property(e => e.Website).HasMaxLength(200);
+            entity.Property(e => e.TaxId).HasMaxLength(50);
+            entity.Property(e => e.RegistrationNumber).HasMaxLength(50);
+            entity.Property(e => e.Description).HasMaxLength(1000);
+        });
+
         // Seed default categories with static date
         var seedDate = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc);
         modelBuilder.Entity<Category>().HasData(
@@ -120,6 +138,25 @@ public class ApplicationDbContext : DbContext
                 Role = "Admin",
                 IsActive = true,
                 CreatedAt = seedDate
+            }
+        );
+
+        // Seed default company profile
+        modelBuilder.Entity<Company>().HasData(
+            new Company
+            {
+                Id = 1,
+                Name = "Your Company Name",
+                Address = "123 Business Street",
+                City = "Dhaka",
+                Country = "Bangladesh",
+                PostalCode = "1000",
+                Phone = "+880 1234-567890",
+                Email = "info@yourcompany.com",
+                Website = "www.yourcompany.com",
+                Description = "Your company description goes here.",
+                CreatedAt = seedDate,
+                UpdatedAt = seedDate
             }
         );
     }

@@ -5,6 +5,7 @@ import { ContractsComponent } from './pages/contracts/contracts.component';
 import { ContractDetailComponent } from './pages/contract-detail/contract-detail.component';
 import { SuppliersComponent } from './pages/suppliers/suppliers.component';
 import { CategoriesComponent } from './pages/categories/categories.component';
+import { CompanyProfileComponent } from './pages/company-profile/company-profile.component';
 import { authGuard } from './guards/auth.guard';
 
 export const routes: Routes = [
@@ -14,5 +15,6 @@ export const routes: Routes = [
   { path: 'contracts', component: ContractsComponent, canActivate: [authGuard] },
   { path: 'contracts/:id', component: ContractDetailComponent, canActivate: [authGuard] },
   { path: 'suppliers', component: SuppliersComponent, canActivate: [authGuard] },
-  { path: 'categories', component: CategoriesComponent, canActivate: [authGuard] }
+  { path: 'categories', component: CategoriesComponent, canActivate: [authGuard] },
+  { path: 'company', component: CompanyProfileComponent, canActivate: [authGuard] }
 ];

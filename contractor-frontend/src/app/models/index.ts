@@ -75,3 +75,21 @@ export interface RecentContract {
   spentAmount: number;
   progress: number;
 }
+
+export interface Company {
+  id: number;
+  name: string;
+  logo?: string;
+  address?: string;
+  city?: string;
+  country?: string;
+  postalCode?: string;
+  phone?: string;
+  email?: string;
+  website?: string;
+  taxId?: string;
+  registrationNumber?: string;
+  description?: string;
+  createdAt: string;
+  updatedAt: string;
+}

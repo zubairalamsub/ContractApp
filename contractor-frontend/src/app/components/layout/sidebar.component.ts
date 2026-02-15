@@ -331,7 +331,8 @@ export class SidebarComponent {
     { icon: 'dashboard', label: 'Dashboard', route: '/dashboard', exact: true },
     { icon: 'description', label: 'Contracts', route: '/contracts', exact: false },
     { icon: 'business', label: 'Suppliers', route: '/suppliers', exact: false },
-    { icon: 'category', label: 'Categories', route: '/categories', exact: false }
+    { icon: 'category', label: 'Categories', route: '/categories', exact: false },
+    { icon: 'domain', label: 'Company Profile', route: '/company', exact: false }
   ];
 
   constructor(public authService: AuthService) {}
