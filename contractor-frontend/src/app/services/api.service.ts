@@ -7,7 +7,7 @@ import { Contract, ContractItem, Category, Supplier, DashboardStats } from '../m
   providedIn: 'root'
 })
 export class ApiService {
-  private baseUrl = 'http://localhost:5000/api';
+  private baseUrl = 'https://contractapp-k7cc.onrender.com/api';
 
   constructor(private http: HttpClient) {}
 
