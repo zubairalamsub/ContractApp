@@ -21,92 +21,143 @@ import { AuthService } from '../../services/auth.service';
   ],
   template: `
     <div class="login-container">
-      <mat-card class="login-card">
-        <div class="logo">
-          <h1>ContractorPro</h1>
-          <p>Contract Management System</p>
+      <div class="login-wrapper">
+        <!-- Left Panel - Branding -->
+        <div class="brand-panel">
+          <div class="brand-content">
+            <div class="logo-section">
+              <div class="logo-icon">
+                <mat-icon>architecture</mat-icon>
+              </div>
+              <h1>ContractorPro</h1>
+            </div>
+            <p class="tagline">Streamline your contract management with powerful tools and insights.</p>
+            <div class="features">
+              <div class="feature">
+                <mat-icon>description</mat-icon>
+                <span>Manage Contracts</span>
+              </div>
+              <div class="feature">
+                <mat-icon>analytics</mat-icon>
+                <span>Track Progress</span>
+              </div>
+              <div class="feature">
+                <mat-icon>business</mat-icon>
+                <span>Supplier Management</span>
+              </div>
+            </div>
+          </div>
+          <div class="brand-footer">
+            <p>&copy; 2024 ContractorPro. All rights reserved.</p>
+          </div>
         </div>
 
-        <mat-tab-group>
-          <mat-tab label="Login">
-            <form (ngSubmit)="login()" #loginForm="ngForm" class="form">
-              <mat-form-field appearance="outline">
-                <mat-label>Username</mat-label>
-                <input matInput [(ngModel)]="loginData.username" name="username" required>
-                <mat-icon matPrefix>person</mat-icon>
-              </mat-form-field>
+        <!-- Right Panel - Form -->
+        <div class="form-panel">
+          <mat-card class="login-card">
+            <mat-tab-group animationDuration="200ms">
+              <mat-tab>
+                <ng-template mat-tab-label>
+                  <mat-icon>login</mat-icon>
+                  <span>Sign In</span>
+                </ng-template>
+                <form (ngSubmit)="login()" #loginForm="ngForm" class="form">
+                  <div class="form-header">
+                    <h2>Welcome back</h2>
+                    <p>Enter your credentials to access your account</p>
+                  </div>
 
-              <mat-form-field appearance="outline">
-                <mat-label>Password</mat-label>
-                <input matInput [type]="hidePassword ? 'password' : 'text'"
-                       [(ngModel)]="loginData.password" name="password" required>
-                <mat-icon matPrefix>lock</mat-icon>
-                <button mat-icon-button matSuffix type="button"
-                        (click)="hidePassword = !hidePassword">
-                  <mat-icon>{{hidePassword ? 'visibility_off' : 'visibility'}}</mat-icon>
-                </button>
-              </mat-form-field>
+                  <mat-form-field appearance="outline">
+                    <mat-label>Username</mat-label>
+                    <input matInput [(ngModel)]="loginData.username" name="username" required autocomplete="username">
+                    <mat-icon matPrefix>person_outline</mat-icon>
+                  </mat-form-field>
 
-              <div class="error-message" *ngIf="errorMessage">
-                {{errorMessage}}
-              </div>
+                  <mat-form-field appearance="outline">
+                    <mat-label>Password</mat-label>
+                    <input matInput [type]="hidePassword ? 'password' : 'text'"
+                           [(ngModel)]="loginData.password" name="password" required autocomplete="current-password">
+                    <mat-icon matPrefix>lock_outline</mat-icon>
+                    <button mat-icon-button matSuffix type="button"
+                            (click)="hidePassword = !hidePassword" tabindex="-1">
+                      <mat-icon>{{hidePassword ? 'visibility_off' : 'visibility'}}</mat-icon>
+                    </button>
+                  </mat-form-field>
 
-              <button mat-raised-button color="primary" type="submit"
-                      [disabled]="!loginForm.valid || loading" class="submit-btn">
-                <mat-spinner *ngIf="loading" diameter="20"></mat-spinner>
-                <span *ngIf="!loading">Login</span>
-              </button>
-            </form>
-          </mat-tab>
+                  <div class="error-message" *ngIf="errorMessage">
+                    <mat-icon>error_outline</mat-icon>
+                    <span>{{errorMessage}}</span>
+                  </div>
 
-          <mat-tab label="Register">
-            <form (ngSubmit)="register()" #registerForm="ngForm" class="form">
-              <mat-form-field appearance="outline">
-                <mat-label>Full Name</mat-label>
-                <input matInput [(ngModel)]="registerData.fullName" name="fullName" required>
-                <mat-icon matPrefix>badge</mat-icon>
-              </mat-form-field>
+                  <button mat-raised-button color="primary" type="submit"
+                          [disabled]="!loginForm.valid || loading" class="submit-btn">
+                    <mat-spinner *ngIf="loading" diameter="20"></mat-spinner>
+                    <span *ngIf="!loading">Sign In</span>
+                  </button>
+                </form>
+              </mat-tab>
 
-              <mat-form-field appearance="outline">
-                <mat-label>Username</mat-label>
-                <input matInput [(ngModel)]="registerData.username" name="regUsername" required>
-                <mat-icon matPrefix>person</mat-icon>
-              </mat-form-field>
+              <mat-tab>
+                <ng-template mat-tab-label>
+                  <mat-icon>person_add</mat-icon>
+                  <span>Register</span>
+                </ng-template>
+                <form (ngSubmit)="register()" #registerForm="ngForm" class="form">
+                  <div class="form-header">
+                    <h2>Create account</h2>
+                    <p>Fill in your details to get started</p>
+                  </div>
 
-              <mat-form-field appearance="outline">
-                <mat-label>Email</mat-label>
-                <input matInput type="email" [(ngModel)]="registerData.email" name="email" required>
-                <mat-icon matPrefix>email</mat-icon>
-              </mat-form-field>
+                  <mat-form-field appearance="outline">
+                    <mat-label>Full Name</mat-label>
+                    <input matInput [(ngModel)]="registerData.fullName" name="fullName" required>
+                    <mat-icon matPrefix>badge</mat-icon>
+                  </mat-form-field>
 
-              <mat-form-field appearance="outline">
-                <mat-label>Password</mat-label>
-                <input matInput [type]="hidePassword ? 'password' : 'text'"
-                       [(ngModel)]="registerData.password" name="regPassword" required minlength="6">
-                <mat-icon matPrefix>lock</mat-icon>
-                <button mat-icon-button matSuffix type="button"
-                        (click)="hidePassword = !hidePassword">
-                  <mat-icon>{{hidePassword ? 'visibility_off' : 'visibility'}}</mat-icon>
-                </button>
-              </mat-form-field>
+                  <mat-form-field appearance="outline">
+                    <mat-label>Username</mat-label>
+                    <input matInput [(ngModel)]="registerData.username" name="regUsername" required autocomplete="username">
+                    <mat-icon matPrefix>person_outline</mat-icon>
+                  </mat-form-field>
 
-              <div class="error-message" *ngIf="errorMessage">
-                {{errorMessage}}
-              </div>
+                  <mat-form-field appearance="outline">
+                    <mat-label>Email</mat-label>
+                    <input matInput type="email" [(ngModel)]="registerData.email" name="email" required autocomplete="email">
+                    <mat-icon matPrefix>email</mat-icon>
+                  </mat-form-field>
 
-              <button mat-raised-button color="primary" type="submit"
-                      [disabled]="!registerForm.valid || loading" class="submit-btn">
-                <mat-spinner *ngIf="loading" diameter="20"></mat-spinner>
-                <span *ngIf="!loading">Register</span>
-              </button>
-            </form>
-          </mat-tab>
-        </mat-tab-group>
+                  <mat-form-field appearance="outline">
+                    <mat-label>Password</mat-label>
+                    <input matInput [type]="hidePassword ? 'password' : 'text'"
+                           [(ngModel)]="registerData.password" name="regPassword" required minlength="6" autocomplete="new-password">
+                    <mat-icon matPrefix>lock_outline</mat-icon>
+                    <button mat-icon-button matSuffix type="button"
+                            (click)="hidePassword = !hidePassword" tabindex="-1">
+                      <mat-icon>{{hidePassword ? 'visibility_off' : 'visibility'}}</mat-icon>
+                    </button>
+                  </mat-form-field>
 
-        <div class="demo-credentials">
-          <p>Demo: <strong>admin</strong> / <strong>admin123</strong></p>
+                  <div class="error-message" *ngIf="errorMessage">
+                    <mat-icon>error_outline</mat-icon>
+                    <span>{{errorMessage}}</span>
+                  </div>
+
+                  <button mat-raised-button color="primary" type="submit"
+                          [disabled]="!registerForm.valid || loading" class="submit-btn">
+                    <mat-spinner *ngIf="loading" diameter="20"></mat-spinner>
+                    <span *ngIf="!loading">Create Account</span>
+                  </button>
+                </form>
+              </mat-tab>
+            </mat-tab-group>
+
+            <div class="demo-credentials">
+              <mat-icon>info</mat-icon>
+              <span>Demo: <strong>admin</strong> / <strong>admin123</strong></span>
+            </div>
+          </mat-card>
         </div>
-      </mat-card>
+      </div>
     </div>
   `,
   styles: [`
@@ -115,59 +166,289 @@ import { AuthService } from '../../services/auth.service';
       display: flex;
       align-items: center;
       justify-content: center;
-      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      background: linear-gradient(135deg, var(--bg-dark) 0%, var(--bg-dark-secondary) 50%, var(--primary-dark) 100%);
+      padding: 20px;
     }
+
+    .login-wrapper {
+      display: flex;
+      width: 100%;
+      max-width: 1000px;
+      min-height: 600px;
+      border-radius: var(--radius-xl);
+      overflow: hidden;
+      box-shadow: var(--shadow-xl);
+    }
+
+    .brand-panel {
+      flex: 1;
+      background: linear-gradient(180deg, rgba(79, 70, 229, 0.9) 0%, rgba(55, 48, 163, 0.95) 100%);
+      padding: 48px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      color: white;
+      position: relative;
+      overflow: hidden;
+
+      &::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -50%;
+        width: 100%;
+        height: 100%;
+        background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 60%);
+      }
+    }
+
+    .brand-content {
+      position: relative;
+      z-index: 1;
+    }
+
+    .logo-section {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .logo-icon {
+      width: 56px;
+      height: 56px;
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: var(--radius-md);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      backdrop-filter: blur(10px);
+
+      mat-icon {
+        font-size: 32px;
+        width: 32px;
+        height: 32px;
+      }
+    }
+
+    .brand-panel h1 {
+      margin: 0;
+      font-size: 28px;
+      font-weight: 700;
+      color: white;
+    }
+
+    .tagline {
+      font-size: 1.125rem;
+      line-height: 1.6;
+      opacity: 0.9;
+      margin-bottom: 40px;
+    }
+
+    .features {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .feature {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 16px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: var(--radius-md);
+      backdrop-filter: blur(5px);
+      transition: all var(--transition-fast);
+
+      &:hover {
+        background: rgba(255, 255, 255, 0.15);
+        transform: translateX(4px);
+      }
+
+      mat-icon {
+        font-size: 24px;
+        width: 24px;
+        height: 24px;
+      }
+
+      span {
+        font-weight: 500;
+      }
+    }
+
+    .brand-footer {
+      position: relative;
+      z-index: 1;
+
+      p {
+        margin: 0;
+        font-size: 0.875rem;
+        opacity: 0.7;
+      }
+    }
+
+    .form-panel {
+      flex: 1;
+      background: var(--bg-card);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 48px;
+    }
+
     .login-card {
       width: 100%;
-      max-width: 420px;
-      padding: 32px;
+      max-width: 400px;
+      box-shadow: none !important;
+      border: none !important;
+      background: transparent !important;
     }
-    .logo {
-      text-align: center;
-      margin-bottom: 24px;
-      h1 {
-        margin: 0;
-        color: #1a1a2e;
-        font-size: 28px;
-      }
-      p {
-        margin: 4px 0 0;
-        color: #6b7280;
-        font-size: 14px;
-      }
-    }
+
     .form {
       padding: 24px 0;
-      mat-form-field {
-        width: 100%;
-        margin-bottom: 8px;
+    }
+
+    .form-header {
+      margin-bottom: 24px;
+
+      h2 {
+        margin: 0 0 8px;
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--text-primary);
+      }
+
+      p {
+        margin: 0;
+        color: var(--text-secondary);
+        font-size: 0.875rem;
       }
     }
+
+    mat-form-field {
+      width: 100%;
+      margin-bottom: 8px;
+    }
+
     .submit-btn {
       width: 100%;
-      height: 48px;
+      height: 52px;
       font-size: 16px;
+      font-weight: 600;
+      margin-top: 8px;
+
       mat-spinner {
         display: inline-block;
       }
     }
+
     .error-message {
-      background: #fee2e2;
-      color: #dc2626;
-      padding: 12px;
-      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--error-bg);
+      color: var(--error);
+      padding: 12px 16px;
+      border-radius: var(--radius-md);
       margin-bottom: 16px;
-      font-size: 14px;
+      font-size: 0.875rem;
+
+      mat-icon {
+        font-size: 20px;
+        width: 20px;
+        height: 20px;
+        flex-shrink: 0;
+      }
     }
+
     .demo-credentials {
-      text-align: center;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 16px;
+      background: var(--bg-secondary);
+      border-radius: var(--radius-md);
       margin-top: 16px;
-      padding-top: 16px;
-      border-top: 1px solid #e5e7eb;
-      p {
-        margin: 0;
-        color: #6b7280;
-        font-size: 13px;
+      font-size: 0.875rem;
+      color: var(--text-secondary);
+
+      mat-icon {
+        font-size: 18px;
+        width: 18px;
+        height: 18px;
+        color: var(--primary);
+      }
+
+      strong {
+        color: var(--text-primary);
+      }
+    }
+
+    ::ng-deep .mat-mdc-tab-labels {
+      justify-content: center;
+      gap: 8px;
+    }
+
+    ::ng-deep .mat-mdc-tab {
+      min-width: auto;
+      padding: 0 24px;
+
+      .mdc-tab__content {
+        gap: 8px;
+      }
+    }
+
+    @media (max-width: 900px) {
+      .login-wrapper {
+        flex-direction: column;
+        max-width: 480px;
+      }
+
+      .brand-panel {
+        padding: 32px;
+        min-height: auto;
+      }
+
+      .features {
+        display: none;
+      }
+
+      .tagline {
+        margin-bottom: 0;
+        font-size: 1rem;
+      }
+
+      .form-panel {
+        padding: 32px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .login-container {
+        padding: 0;
+      }
+
+      .login-wrapper {
+        border-radius: 0;
+        min-height: 100vh;
+      }
+
+      .brand-panel {
+        padding: 24px;
+      }
+
+      .form-panel {
+        padding: 24px;
+      }
+
+      .logo-section h1 {
+        font-size: 24px;
+      }
+
+      .form-header h2 {
+        font-size: 1.25rem;
       }
     }
   `]
