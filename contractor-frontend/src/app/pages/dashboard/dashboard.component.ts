@@ -4,6 +4,7 @@ import { RouterModule } from '@angular/router';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTableModule } from '@angular/material/table';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatButtonModule } from '@angular/material/button';
@@ -15,7 +16,7 @@ import { DashboardStats } from '../../models';
   standalone: true,
   imports: [
     CommonModule, RouterModule, MatCardModule, MatIconModule,
-    MatProgressBarModule, MatTableModule, MatChipsModule, MatButtonModule
+    MatProgressBarModule, MatProgressSpinnerModule, MatTableModule, MatChipsModule, MatButtonModule
   ],
   template: `
     <div class="dashboard fade-in">
@@ -26,7 +27,24 @@ import { DashboardStats } from '../../models';
         </div>
       </header>
 
-      <div class="stats-grid" *ngIf="stats">
+      <!-- Loading State -->
+      <div class="loading-container" *ngIf="loading">
+        <mat-spinner diameter="48" color="primary"></mat-spinner>
+        <p>Loading dashboard...</p>
+      </div>
+
+      <!-- Error State -->
+      <div class="error-container" *ngIf="error">
+        <mat-icon>error_outline</mat-icon>
+        <h3>Failed to load dashboard</h3>
+        <p>{{error}}</p>
+        <button mat-raised-button color="primary" (click)="loadDashboard()">
+          <mat-icon>refresh</mat-icon>
+          Retry
+        </button>
+      </div>
+
+      <div class="stats-grid" *ngIf="stats && !loading">
         <div class="stat-card" *ngFor="let stat of statCards; let i = index"
              [style.animation-delay]="i * 0.1 + 's'">
           <div class="stat-icon" [class]="stat.colorClass">
@@ -462,47 +480,112 @@ import { DashboardStats } from '../../models';
         font-size: 1.5rem;
       }
     }
+
+    .loading-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 80px 20px;
+      gap: 16px;
+
+      p {
+        color: var(--text-secondary);
+        font-size: 0.875rem;
+      }
+
+      ::ng-deep .mat-mdc-progress-spinner circle {
+        stroke: var(--primary) !important;
+      }
+    }
+
+    .error-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 80px 20px;
+      gap: 12px;
+      text-align: center;
+
+      mat-icon {
+        font-size: 56px;
+        width: 56px;
+        height: 56px;
+        color: var(--error);
+      }
+
+      h3 {
+        margin: 0;
+        color: var(--text-primary);
+      }
+
+      p {
+        margin: 0;
+        color: var(--text-secondary);
+      }
+
+      button {
+        margin-top: 8px;
+        gap: 8px;
+      }
+    }
   `]
 })
 export class DashboardComponent implements OnInit {
   stats: DashboardStats | null = null;
   displayedColumns = ['contractNumber', 'title', 'client', 'status', 'progress'];
   statCards: any[] = [];
+  loading = true;
+  error = '';
 
   constructor(private apiService: ApiService) {}
 
   ngOnInit() {
-    this.apiService.getDashboard().subscribe(stats => {
-      this.stats = stats;
-      this.statCards = [
-        {
-          icon: 'description',
-          label: 'Total Contracts',
-          value: stats.totalContracts,
-          colorClass: 'blue',
-          trend: 12
-        },
-        {
-          icon: 'play_circle',
-          label: 'Active Contracts',
-          value: stats.activeContracts,
-          colorClass: 'green',
-          trend: 8
-        },
-        {
-          icon: 'account_balance_wallet',
-          label: 'Total Budget',
-          value: this.formatCurrency(stats.totalBudget),
-          colorClass: 'amber'
-        },
-        {
-          icon: 'business',
-          label: 'Suppliers',
-          value: stats.totalSuppliers,
-          colorClass: 'purple',
-          trend: 5
-        }
-      ];
+    this.loadDashboard();
+  }
+
+  loadDashboard() {
+    this.loading = true;
+    this.error = '';
+    this.apiService.getDashboard().subscribe({
+      next: (stats) => {
+        this.stats = stats;
+        this.statCards = [
+          {
+            icon: 'description',
+            label: 'Total Contracts',
+            value: stats.totalContracts,
+            colorClass: 'blue',
+            trend: 12
+          },
+          {
+            icon: 'play_circle',
+            label: 'Active Contracts',
+            value: stats.activeContracts,
+            colorClass: 'green',
+            trend: 8
+          },
+          {
+            icon: 'account_balance_wallet',
+            label: 'Total Budget',
+            value: this.formatCurrency(stats.totalBudget),
+            colorClass: 'amber'
+          },
+          {
+            icon: 'business',
+            label: 'Suppliers',
+            value: stats.totalSuppliers,
+            colorClass: 'purple',
+            trend: 5
+          }
+        ];
+        this.loading = false;
+      },
+      error: (err) => {
+        this.error = err.message || 'Failed to load dashboard data';
+        this.loading = false;
+      }
     });
   }
 

@@ -9,9 +9,11 @@ import { MatTableModule } from '@angular/material/table';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatDialogModule, MatDialog } from '@angular/material/dialog';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { ApiService } from '../../services/api.service';
 import { Contract, ContractItem, Category, Supplier } from '../../models';
 import { ItemDialogComponent } from './item-dialog.component';
@@ -22,10 +24,29 @@ import { ItemDialogComponent } from './item-dialog.component';
   imports: [
     CommonModule, RouterModule, FormsModule, MatCardModule, MatButtonModule,
     MatIconModule, MatTableModule, MatChipsModule, MatDialogModule,
-    MatProgressBarModule, MatInputModule, MatSelectModule, MatFormFieldModule
+    MatProgressBarModule, MatProgressSpinnerModule, MatInputModule, MatSelectModule,
+    MatFormFieldModule, MatTooltipModule
   ],
   template: `
-    <div class="contract-detail" *ngIf="contract">
+    <div class="contract-detail fade-in">
+      <!-- Loading State -->
+      <div class="loading-container" *ngIf="loading">
+        <mat-spinner diameter="48"></mat-spinner>
+        <p>Loading contract details...</p>
+      </div>
+
+      <!-- Error State -->
+      <div class="error-container" *ngIf="error && !loading">
+        <mat-icon>error_outline</mat-icon>
+        <h3>Failed to load contract</h3>
+        <p>{{error}}</p>
+        <button mat-raised-button color="primary" routerLink="/contracts">
+          <mat-icon>arrow_back</mat-icon>
+          Back to Contracts
+        </button>
+      </div>
+
+    <div class="contract-content" *ngIf="contract && !loading">
       <div class="header">
         <div class="back-btn">
           <button mat-icon-button routerLink="/contracts">
@@ -203,10 +224,67 @@ import { ItemDialogComponent } from './item-dialog.component';
         </mat-card-content>
       </mat-card>
     </div>
+    </div>
   `,
   styles: [`
     .contract-detail {
-      padding: 20px;
+      padding: 24px;
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    .loading-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 80px 20px;
+      gap: 16px;
+
+      p {
+        color: var(--text-secondary);
+        font-size: 0.875rem;
+      }
+
+      ::ng-deep .mat-mdc-progress-spinner circle {
+        stroke: var(--primary) !important;
+      }
+    }
+
+    .error-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 80px 20px;
+      gap: 12px;
+      text-align: center;
+
+      mat-icon {
+        font-size: 56px;
+        width: 56px;
+        height: 56px;
+        color: var(--error);
+      }
+
+      h3 {
+        margin: 0;
+        color: var(--text-primary);
+      }
+
+      p {
+        margin: 0;
+        color: var(--text-secondary);
+      }
+
+      button {
+        margin-top: 8px;
+        gap: 8px;
+      }
+    }
+
+    .contract-content {
+      animation: fadeIn 0.3s ease-out;
     }
     .header {
       display: flex;
@@ -296,6 +374,8 @@ export class ContractDetailComponent implements OnInit {
   searchTerm = '';
   statusFilter = '';
   itemColumns = ['name', 'category', 'supplier', 'quantity', 'unitPrice', 'total', 'deliveryStatus', 'actions'];
+  loading = true;
+  error = '';
 
   constructor(
     private route: ActivatedRoute,
@@ -311,9 +391,18 @@ export class ContractDetailComponent implements OnInit {
   }
 
   loadContract(id: number) {
-    this.apiService.getContract(id).subscribe(contract => {
-      this.contract = contract;
-      this.items = contract.items || [];
+    this.loading = true;
+    this.error = '';
+    this.apiService.getContract(id).subscribe({
+      next: (contract) => {
+        this.contract = contract;
+        this.items = contract.items || [];
+        this.loading = false;
+      },
+      error: (err) => {
+        this.error = err.message || 'Failed to load contract';
+        this.loading = false;
+      }
     });
   }
 
