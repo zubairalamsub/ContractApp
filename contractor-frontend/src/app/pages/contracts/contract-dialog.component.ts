@@ -88,7 +88,9 @@ import { Contract } from '../../models';
   `,
   styles: [`
     mat-dialog-content {
-      min-width: 500px;
+      min-width: min(500px, 80vw);
+      max-height: 70vh;
+      overflow-y: auto;
     }
     mat-form-field {
       width: 100%;
@@ -99,6 +101,16 @@ import { Contract } from '../../models';
       gap: 16px;
       mat-form-field {
         flex: 1;
+      }
+    }
+    @media (max-width: 600px) {
+      mat-dialog-content {
+        min-width: unset;
+        width: 100%;
+      }
+      .date-row {
+        flex-direction: column;
+        gap: 0;
       }
     }
   `]

@@ -72,7 +72,8 @@ import { ContractDialogComponent } from './contract-dialog.component';
         </button>
       </div>
 
-      <mat-card class="contracts-card" *ngIf="!loading && !error">
+      <!-- Desktop Table View -->
+      <mat-card class="contracts-card desktop-view" *ngIf="!loading && !error">
         <div class="table-container">
           <table mat-table [dataSource]="contracts" class="contracts-table">
             <ng-container matColumnDef="contractNumber">
@@ -178,6 +179,82 @@ import { ContractDialogComponent } from './contract-dialog.component';
           </button>
         </div>
       </mat-card>
+
+      <!-- Mobile Card View -->
+      <div class="mobile-view" *ngIf="!loading && !error">
+        <div class="mobile-cards" *ngIf="contracts.length > 0">
+          <mat-card class="contract-card" *ngFor="let contract of contracts"
+                    [routerLink]="['/contracts', contract.id]">
+            <div class="card-header">
+              <div class="card-title-section">
+                <h3 class="card-title">{{contract.title}}</h3>
+                <span class="card-client">{{contract.client}}</span>
+              </div>
+              <mat-chip [class]="'status-' + contract.status.toLowerCase()" class="card-status">
+                {{contract.status}}
+              </mat-chip>
+            </div>
+
+            <div class="card-details">
+              <div class="detail-row">
+                <span class="detail-label">Contract #</span>
+                <span class="contract-number">{{contract.contractNumber}}</span>
+              </div>
+              <div class="detail-row" *ngIf="contract.tenderNumber">
+                <span class="detail-label">Tender #</span>
+                <span class="detail-value">{{contract.tenderNumber}}</span>
+              </div>
+              <div class="detail-row">
+                <span class="detail-label">Duration</span>
+                <span class="detail-value">{{contract.startDate | date:'dd MMM yyyy'}} - {{contract.endDate | date:'dd MMM yyyy'}}</span>
+              </div>
+              <div class="detail-row">
+                <span class="detail-label">Budget</span>
+                <span class="budget-amount">{{contract.totalBudget | currency:'BDT':'symbol':'1.0-0'}}</span>
+              </div>
+            </div>
+
+            <div class="card-progress">
+              <div class="progress-header">
+                <span class="progress-label">Spent: {{contract.spentAmount | currency:'BDT':'symbol':'1.0-0'}}</span>
+                <span class="progress-text">{{getProgress(contract)}}%</span>
+              </div>
+              <mat-progress-bar mode="determinate" [value]="getProgress(contract)"
+                [class.high]="getProgress(contract) >= 75"
+                [class.medium]="getProgress(contract) >= 50 && getProgress(contract) < 75"
+                [class.low]="getProgress(contract) < 50">
+              </mat-progress-bar>
+            </div>
+
+            <div class="card-actions">
+              <button mat-icon-button [routerLink]="['/contracts', contract.id]"
+                      (click)="$event.stopPropagation()" class="action-btn view">
+                <mat-icon>visibility</mat-icon>
+              </button>
+              <button mat-icon-button (click)="openDialog(contract); $event.stopPropagation()"
+                      class="action-btn edit">
+                <mat-icon>edit</mat-icon>
+              </button>
+              <button mat-icon-button (click)="deleteContract(contract); $event.stopPropagation()"
+                      class="action-btn delete">
+                <mat-icon>delete</mat-icon>
+              </button>
+            </div>
+          </mat-card>
+        </div>
+
+        <div class="empty-state" *ngIf="contracts.length === 0">
+          <div class="empty-icon">
+            <mat-icon>description</mat-icon>
+          </div>
+          <h3>No contracts yet</h3>
+          <p>Create your first contract to get started</p>
+          <button mat-raised-button color="primary" (click)="openDialog()">
+            <mat-icon>add</mat-icon>
+            Create Contract
+          </button>
+        </div>
+      </div>
     </div>
   `,
   styles: [`
@@ -435,6 +512,15 @@ import { ContractDialogComponent } from './contract-dialog.component';
       }
     }
 
+    /* Desktop/Mobile view toggles */
+    .desktop-view {
+      display: block;
+    }
+
+    .mobile-view {
+      display: none;
+    }
+
     @media (max-width: 768px) {
       .contracts-page {
         padding: 16px;
@@ -446,16 +532,147 @@ import { ContractDialogComponent } from './contract-dialog.component';
       }
 
       .header-actions {
-        flex-direction: column;
+        flex-direction: row;
         width: 100%;
 
-        .export-btn, .add-btn {
-          width: 100%;
+        .export-btn {
+          flex: 1;
+        }
+
+        .add-btn {
+          flex: 1;
         }
       }
 
       .page-header h1 {
         font-size: 1.5rem;
+      }
+
+      .desktop-view {
+        display: none !important;
+      }
+
+      .mobile-view {
+        display: block;
+      }
+
+      .mobile-cards {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+      }
+
+      .contract-card {
+        padding: 16px;
+        cursor: pointer;
+        transition: box-shadow var(--transition-fast);
+
+        &:hover {
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+      }
+
+      .card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 12px;
+        margin-bottom: 16px;
+      }
+
+      .card-title-section {
+        flex: 1;
+        min-width: 0;
+      }
+
+      .card-title {
+        margin: 0;
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .card-client {
+        font-size: 0.875rem;
+        color: var(--text-secondary);
+      }
+
+      .card-status {
+        flex-shrink: 0;
+      }
+
+      .card-details {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        margin-bottom: 16px;
+        padding: 12px;
+        background: var(--bg-secondary);
+        border-radius: var(--radius-md);
+      }
+
+      .detail-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .detail-label {
+        font-size: 0.8125rem;
+        color: var(--text-secondary);
+      }
+
+      .detail-value {
+        font-size: 0.875rem;
+        color: var(--text-primary);
+        text-align: right;
+      }
+
+      .card-progress {
+        margin-bottom: 12px;
+
+        .progress-header {
+          display: flex;
+          justify-content: space-between;
+          margin-bottom: 8px;
+        }
+
+        .progress-label {
+          font-size: 0.8125rem;
+          color: var(--text-secondary);
+        }
+
+        .progress-text {
+          font-size: 0.8125rem;
+          font-weight: 600;
+          color: var(--text-primary);
+        }
+
+        mat-progress-bar {
+          border-radius: 9999px;
+
+          &.high ::ng-deep .mdc-linear-progress__bar-inner {
+            background: var(--success) !important;
+          }
+          &.medium ::ng-deep .mdc-linear-progress__bar-inner {
+            background: var(--warning) !important;
+          }
+          &.low ::ng-deep .mdc-linear-progress__bar-inner {
+            background: var(--primary) !important;
+          }
+        }
+      }
+
+      .card-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 4px;
+        padding-top: 12px;
+        border-top: 1px solid var(--border-light);
       }
     }
 
@@ -549,6 +766,7 @@ export class ContractsComponent implements OnInit {
   openDialog(contract?: Contract) {
     const dialogRef = this.dialog.open(ContractDialogComponent, {
       width: '600px',
+      maxWidth: '95vw',
       data: contract || null,
       panelClass: 'modern-dialog'
     });
