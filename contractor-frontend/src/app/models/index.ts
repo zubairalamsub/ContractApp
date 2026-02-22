@@ -1,6 +1,7 @@
 export interface Contract {
   id: number;
   contractNumber: string;
+  tenderNumber?: string;
   title: string;
   client: string;
   description: string;

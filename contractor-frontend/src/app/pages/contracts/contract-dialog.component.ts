@@ -28,6 +28,11 @@ import { Contract } from '../../models';
         </mat-form-field>
 
         <mat-form-field appearance="outline">
+          <mat-label>Tender Number</mat-label>
+          <input matInput [(ngModel)]="contract.tenderNumber" name="tenderNumber">
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
           <mat-label>Title</mat-label>
           <input matInput [(ngModel)]="contract.title" name="title" required>
         </mat-form-field>
@@ -110,6 +115,7 @@ export class ContractDialogComponent {
     this.isEdit = !!data;
     this.contract = data ? { ...data } : {
       contractNumber: '',
+      tenderNumber: '',
       title: '',
       client: '',
       description: '',

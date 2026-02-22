@@ -78,7 +78,21 @@ import { ContractDialogComponent } from './contract-dialog.component';
             <ng-container matColumnDef="contractNumber">
               <th mat-header-cell *matHeaderCellDef>Contract #</th>
               <td mat-cell *matCellDef="let contract">
-                <span class="contract-number">{{contract.contractNumber}}</span>
+                <div class="contract-numbers">
+                  <span class="contract-number">{{contract.contractNumber}}</span>
+                  <span class="tender-number" *ngIf="contract.tenderNumber">Tender: {{contract.tenderNumber}}</span>
+                </div>
+              </td>
+            </ng-container>
+
+            <ng-container matColumnDef="date">
+              <th mat-header-cell *matHeaderCellDef>Date</th>
+              <td mat-cell *matCellDef="let contract">
+                <div class="date-info">
+                  <span class="start-date">{{contract.startDate | date:'dd MMM yyyy'}}</span>
+                  <span class="date-separator">to</span>
+                  <span class="end-date">{{contract.endDate | date:'dd MMM yyyy'}}</span>
+                </div>
               </td>
             </ng-container>
 
@@ -237,6 +251,12 @@ import { ContractDialogComponent } from './contract-dialog.component';
       min-width: 800px;
     }
 
+    .contract-numbers {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
     .contract-number {
       font-family: 'SF Mono', 'Monaco', monospace;
       font-size: 0.875rem;
@@ -245,6 +265,34 @@ import { ContractDialogComponent } from './contract-dialog.component';
       background: var(--bg-secondary);
       padding: 4px 10px;
       border-radius: var(--radius-sm);
+      display: inline-block;
+      width: fit-content;
+    }
+
+    .tender-number {
+      font-size: 0.75rem;
+      color: var(--text-secondary);
+    }
+
+    .date-info {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      font-size: 0.8125rem;
+    }
+
+    .start-date {
+      color: var(--text-primary);
+      font-weight: 500;
+    }
+
+    .date-separator {
+      font-size: 0.7rem;
+      color: var(--text-muted);
+    }
+
+    .end-date {
+      color: var(--text-secondary);
     }
 
     .contract-info {
@@ -464,7 +512,7 @@ import { ContractDialogComponent } from './contract-dialog.component';
 })
 export class ContractsComponent implements OnInit {
   contracts: Contract[] = [];
-  displayedColumns = ['contractNumber', 'title', 'budget', 'status', 'progress', 'actions'];
+  displayedColumns = ['contractNumber', 'date', 'title', 'budget', 'status', 'progress', 'actions'];
   loading = true;
   error = '';
 

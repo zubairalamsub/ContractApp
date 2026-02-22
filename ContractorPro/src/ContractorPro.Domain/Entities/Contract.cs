@@ -4,6 +4,7 @@ public class Contract
 {
     public int Id { get; set; }
     public string ContractNumber { get; set; } = string.Empty;
+    public string? TenderNumber { get; set; }
     public string Title { get; set; } = string.Empty;
     public string Client { get; set; } = string.Empty;
     public string Description { get; set; } = string.Empty;
