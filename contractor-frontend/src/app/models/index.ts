@@ -69,6 +69,7 @@ export interface DashboardStats {
 export interface RecentContract {
   id: number;
   contractNumber: string;
+  tenderNumber?: string;
   title: string;
   client: string;
   status: string;

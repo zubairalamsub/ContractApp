@@ -83,7 +83,10 @@ import { DashboardStats } from '../../models';
                 <ng-container matColumnDef="contractNumber">
                   <th mat-header-cell *matHeaderCellDef>Contract #</th>
                   <td mat-cell *matCellDef="let contract">
-                    <span class="contract-number">{{contract.contractNumber}}</span>
+                    <div class="contract-numbers">
+                      <span class="contract-number">{{contract.contractNumber}}</span>
+                      <span class="tender-number" *ngIf="contract.tenderNumber">Tender: {{contract.tenderNumber}}</span>
+                    </div>
                   </td>
                 </ng-container>
 
@@ -338,11 +341,22 @@ import { DashboardStats } from '../../models';
       width: 100%;
     }
 
+    .contract-numbers {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
     .contract-number {
       font-family: 'SF Mono', 'Monaco', monospace;
       font-size: 0.875rem;
       color: var(--primary);
       font-weight: 500;
+    }
+
+    .tender-number {
+      font-size: 0.75rem;
+      color: var(--text-secondary);
     }
 
     .contract-title {

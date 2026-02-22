@@ -39,6 +39,7 @@ public class DashboardController : ControllerBase
                 {
                     Id = c.Id,
                     ContractNumber = c.ContractNumber,
+                    TenderNumber = c.TenderNumber,
                     Title = c.Title,
                     Client = c.Client,
                     Status = c.Status,
@@ -71,6 +72,7 @@ public class RecentContract
 {
     public int Id { get; set; }
     public string ContractNumber { get; set; } = string.Empty;
+    public string? TenderNumber { get; set; }
     public string Title { get; set; } = string.Empty;
     public string Client { get; set; } = string.Empty;
     public string Status { get; set; } = string.Empty;
